@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELENE6889-Project-Group1</title>
+    {% load static %}
+    <link rel="stylesheet" href='{% static "result.css" %}'>
+    <link rel="shortcut icon" type="image/png" href="{% static 'proj1.ico' %}"/>
+    <link rel="stylesheet" href="{% static "leaflet.css" %}" />
+    <script type="text/javascript" src="{% static "leaflet.js" %}"></script>
+    <script type="text/javascript" src="{% static "new-us-states.js" %}"></script>
+    <script type="text/javascript" src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script> <!-- jQuery -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script> <!-- chart.js -->
+    <script type="text/javascript" src="https://platform.twitter.com/widgets.js"></script> <!-- jQuery -->
+    <script type="text/javascript">
+        function reload_js(src) {
+            $('script[src="' + src + '"]').remove();
+            $('<script>').attr('src', src).appendTo('head');
+        }
+        function getColor(d) {
+            return d > 100000 ? '#800026' :
+                   d > 50000  ? '#BD0026' :
+                   d > 15000  ? '#E31A1C' :
+                   d > 5000  ? '#FC4E2A' :
+                   d > 2000   ? '#FD8D3C' :
+                   d > 500   ? '#FEB24C' :
+                   d > 100   ? '#FED976' :
+                              '#FFEDA0';
+        }
+    </script>
+    <script>
+        window.twttr = (function(d, s, id) {
+          var js, fjs = d.getElementsByTagName(s)[0],
+            t = window.twttr || {};
+          if (d.getElementById(id)) return t;
+          js = d.createElement(s);
+          js.id = id;
+          js.src = "https://platform.twitter.com/widgets.js";
+          fjs.parentNode.insertBefore(js, fjs);
+
+          t._e = [];
+          t.ready = function(f) {
+            t._e.push(f);
+          };
+
+          return t;
+    }(document, "script", "twitter-wjs"));
+    </script>
+
+</head>
+
+<body>
+    <header></header>
+    <div id="title">
+        <h1><img src="{% static 'proj1.ico' %}"> Coronavirus Sub-hotspots Trend and News Fusion in United States</h1>
+        <div class="group">Group One</div>
+        <div class="author">Yanwen Jing, Changxu Luo, Yanlin Liu, Weihan Chen</div>
+    </div>
+    <div id="body3", style="width: 1000px; height: 600px">
+{#        <style>#}
+{#            #USAmap {width: 100%; height: 90%}#}
+{#        </style>#}
+        <div id="USAmap" style="width: 100%; height: 90%"></div>
+        <script id="loadMap" type="text/javascript">
+            var mapboxAccessToken = 'pk.eyJ1IjoiaWFud2luOTA3IiwiYSI6ImNrOWltNmNnbzA3ZWkzbXMyOG5uNXNwdWQifQ.-6eX7lHQBIfDFSTsDttfZg';
+            var map = L.map('USAmap').setView([37.8, -96], 4);
+            var legend = L.control({position: 'bottomright'});
+            var info = L.control();
+
+            legend.onAdd = function (map) {
+                    var div = L.DomUtil.create('div', 'info legend'),
+                        grades = [0, 100, 500, 2000, 5000, 15000, 50000, 100000],
+                        labels = [];
+                    // loop through our density intervals and generate a label with a colored square for each interval
+                    for (var i = 0; i < grades.length; i++) {
+                        div.innerHTML +=
+                            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+                            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+                    }
+                    return div;
+                };
+            legend.addTo(map);
+            var layerGroup = new L.LayerGroup();
+            layerGroup.addTo(map);
+            var layer_flag = 0;
+            var geojson;
+            var refresh_seconds = 30;
+
+            function set_refresh_seconds(input) {
+                refresh_seconds = input;
+            }
+
+            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=' + mapboxAccessToken, {
+                    id: 'mapbox/light-v9',
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+                '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                    tileLayer: 512,
+                    zoomOffset: 0
+                }).addTo(map);
+
+            function initialization() {
+                var current_time = new Date();
+                var time_string = current_time.getFullYear().toString() + '-' +
+                        (current_time.getMonth()+1).toString() + '-' +
+                        current_time.getDate().toString() + '  ' +
+                        current_time.getHours().toString() + ':' +
+                        current_time.getMinutes().toString() + ':' +
+                        current_time.getSeconds().toString();
+
+                info.remove();
+                info.onAdd = function (map) {
+                    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+                    this._div.id = 'information'
+                    this.update();
+                    return this._div;
+                };
+
+                info.update = function(props) {
+                    // try add an image here
+                    var mouseLabel = '<h4>Confirmed cases and hotspots in the state</h4>' +
+                            '<h5>' + time_string + '</h5>';
+                    if (props) {
+                        mouseLabel += '<b>' + props.properties.name + '</b>';
+                        //for (var key in props.properties) {}
+                        mouseLabel += '<br />Confirmed cases: ' + props.properties['confirmed_cases'];
+                        mouseLabel += '<br />deaths: ' + props.properties['deaths'];
+                        mouseLabel += '<br /><br /><h4>Hottest hashtags in the state :</h4>';
+
+                        var topic_cnt = 1;
+                        for (var key in props.properties.topics) {
+                            mouseLabel += '<br />' + (topic_cnt).toString() + '. ' + key;
+                            topic_cnt++;
+                            if (topic_cnt >= 6)
+                                break;
+                        }
+                    }
+                    else {
+                        mouseLabel += 'Hover over a state';
+                        mouseLabel += '<br /><br /><h4>Total confirm cases</h4>';
+                        mouseLabel += '<h5><img src={% static "US_Confirm.png" %} style="width: 300px; height: 200px"</h5>';
+                    }
+                    this._div.innerHTML = mouseLabel;
+                };
+
+                info.addTo(map);
+
+                function style(feature) {
+                    return {
+                        fillColor: getColor(feature.properties.confirmed_cases),
+                        weight: 2,
+                        opacity: 1,
+                        color: 'white',
+                        dashArray: '3',
+                        fillOpacity: 0.7
+                    };
+                }
+
+                function highlightFeature(e) {
+                    var layer = e.target;
+
+                    layer.setStyle({
+                        weight: 5,
+                        color: '#666',
+                        dashArray: '',
+                        fillOpacity: 0.7
+                    });
+
+                    //if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                        layer.bringToFront();
+                    //}
+                    info.update(layer.feature);
+                }
+
+                function resetHighlight(e) {
+                    geojson.resetStyle(e.target);
+                    info.update();
+                }
+
+                function zoomToFeature(e) {
+                    map.fitBounds(e.target.getBounds());
+                    var t_s_name = e.target.feature.properties.name;
+                    location.href = `${t_s_name}`;
+                }
+
+                function onEachFeature(feature, layer) {
+                    layer.on({
+                        mouseover: highlightFeature,
+                        mouseout: resetHighlight,
+                        click: zoomToFeature
+                    });
+                }
+
+                if (layer_flag == 1)
+                {
+                    layerGroup.removeLayer(geojson);
+                    console.log("remove a layer");
+                }
+
+                geojson = L.geoJSON(testData2, {
+                    style: style,
+                    onEachFeature: onEachFeature
+                });
+                layerGroup.addLayer(geojson);
+            }
+
+            auto_refresh = function() {
+                initialization();
+                layer_flag = 1;
+                setTimeout(auto_refresh, refresh_seconds * 1000);
+                reload_js("{% static "new-us-states.js" %}");
+            }
+
+            auto_refresh();
+        </script>
+    </div>
+    <footer></footer>
+</body>
+</html>

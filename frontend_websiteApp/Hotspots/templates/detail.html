@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELENE6889-Project-Group1</title>
+    {% load static %}
+    <link rel="stylesheet" href='{% static "detail.css" %}'>
+    <link rel="shortcut icon" type="image/png" href="{% static 'proj1.ico' %}"/>
+    <link rel="stylesheet" href="{% static "leaflet.css" %}" />
+    <script type="text/javascript" src="{% static "leaflet.js" %}"></script>
+    <script type="text/javascript" src="{% static "new-us-states.js" %}"></script>
+    <script type="text/javascript" src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script> <!-- jQuery -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script> <!-- chart.js -->
+    <script type="text/javascript" src="https://platform.twitter.com/widgets.js"></script> <!-- widgets.js -->
+    <script>
+        window.twttr = (function(d, s, id) {
+          var js, fjs = d.getElementsByTagName(s)[0],
+            t = window.twttr || {};
+          if (d.getElementById(id)) return t;
+          js = d.createElement(s);
+          js.id = id;
+          js.src = "https://platform.twitter.com/widgets.js";
+          fjs.parentNode.insertBefore(js, fjs);
+
+          t._e = [];
+          t.ready = function(f) {
+            t._e.push(f);
+          };
+
+          return t;
+    }(document, "script", "twitter-wjs"));
+    </script> <!-- twitter js -->
+    <script type="text/javascript">
+        function sleep(time) {
+            var startTime = new Date().getTime() + parseInt(time, 10);
+            while(new Date().getTime() < startTime) {}
+        };
+        function reload_js(src) {
+            $('script[src="' + src + '"]').remove();
+            $('<script>').attr('src', src).appendTo('head');
+        }
+    </script>
+</head>
+
+<body>
+    <header></header>
+    <div id="title">
+        <h1><img src="{% static 'proj1.ico' %}"> Coronavirus Sub-hotspots Trend and News Fusion in United States</h1>
+        <div class="group">Group One</div>
+        <div class="author">Yanwen Jing, Changxu Luo, Yanlin Liu, Weihan Chen</div>
+    </div>
+    <div id="body5">
+        <script type="text/javascript">
+            function getMapPic() {
+                var origin = "{{ state_detail.name }}";
+                origin = origin.toLowerCase();
+                var splited_array = origin.split(' ');
+                var tmp = document.getElementById('body5');
+                // https://geology.com/county-map/new-york-county-map.gif
+                var merge_array = "https://geology.com/county-map/"
+                if (splited_array.length == 1) {
+                    merge_array = merge_array + splited_array[0] + "-county-map.gif";
+                }
+                else {
+                    for (var k = 0; k < splited_array.length; k++) {
+                        merge_array += splited_array[k] + "-";
+                    }
+                    merge_array += "county-map.gif";
+                }
+                console.log(merge_array);
+                tmp.innerHTML += '<h2><img src="' + merge_array + '"></h2>';
+            }
+            getMapPic();
+        </script>
+    </div>
+    <div id="body10">
+        <script type="text/javascript">
+            function init() {
+                var tmp = document.getElementById('body10');
+                tmp.innerHTML = '<h1>{{ state_detail.name }}</h1>';
+                var confirm = -1;
+                var death = -1;
+                for (var i = 0; i < testData2.features.length; i++) {
+                    var this_name = testData2.features[i].properties.name;
+                    if (this_name == "{{ state_detail.name }}") {
+                        confirm = testData2.features[i].properties.confirmed_cases;
+                        death = testData2.features[i].properties.deaths;
+                        break;
+                    }
+                }
+                var s_confirm = "No Data";
+                var s_death = "No Data";
+                if (confirm != -1)
+                    s_confirm = confirm.toString();
+                if (death != -1)
+                    s_death = death.toString();
+
+                tmp.innerHTML += '<br /><h2>COVID-19 Situation:</h2>' +
+                    '<h3>  Confirmed cases: ' + s_confirm + '</h3>' +
+                    '<h3>  Deaths: ' + s_death + '</h3>' +
+                    '<br /><br /><h2>Hottest Topics in State:</h2>';
+                return tmp.innerHTML;
+            }
+            function reload_iframe() {
+                var tmp = document.getElementById('body10');
+                {% autoescape off %}
+                var testaddress1 = '{{ state_detail.hotspots }}';
+                {% endautoescape %}
+                var testaddress2 = '<iframe width="100%" height="400px" src="https://datastudio.google.com/embed/reporting/1KKOd6Uxr2t62ARGJiiHRCc5HV-0wj_AN/page/eZHPB" frameborder="0" style="border:0" allowfullscreen></iframe>';
+                console.log("From view.py is: " + testaddress1);
+                console.log("Directly copy (work) is: " + testaddress2);
+                tmp.innerHTML = init() + testaddress1;
+                //tmp.innerHTML = init() + '';
+                setTimeout(reload_iframe, 30000);
+            }
+            reload_iframe();
+        </script>
+    </div>
+
+    <div id="body6" style="display: inline-block"></div>
+    <div id="body7" style="display: inline-block"></div>
+    <div id="body8" style="display: inline-block"></div>
+    <div id="body9" style="display: inline-block"></div>
+    <script type="text/javascript">
+        var id = -1;
+        for (var i = 0; i < testData2.features.length; i++) {
+            var this_name = testData2.features[i].properties.name;
+            if (this_name == "{{ state_detail.name }}") {
+                id = i;
+                break;
+            }
+        }
+        function all_in_one_load() {
+            var res = testData2.features[id].properties.tweets_id;
+            var limit = res.length;
+            var to_show = Math.floor(Math.random()*limit);
+            var to_show_1 = (to_show + 1) % limit;
+            var to_show_2 = (to_show + 2) % limit;
+            var to_show_3 = (to_show + 3) % limit;
+            console.log(res);
+            console.log(to_show.toString());
+            console.log(to_show_1.toString());
+            console.log(to_show_2.toString());
+            console.log(to_show_3.toString());
+
+            document.getElementById('body6').innerHTML="";
+            document.getElementById('body7').innerHTML="";
+            document.getElementById('body8').innerHTML="";
+            document.getElementById('body9').innerHTML="";
+            twttr.widgets.createTweet(
+                  res[to_show],
+                  document.getElementById('body6'),
+                  {
+                      theme: 'dark'
+                  }
+            );
+            twttr.widgets.createTweet(
+                  res[to_show_1],
+                  document.getElementById('body7'),
+                  {
+                      width: 400
+                  }
+            );
+            twttr.widgets.createTweet(
+                  res[to_show_2],
+                  document.getElementById('body8'),
+                  {
+                      theme: 'dark'
+                  }
+            );
+            twttr.widgets.createTweet(
+                  res[to_show_3],
+                  document.getElementById('body9'),
+                  {
+                      width: 400
+                  }
+            );
+            setTimeout(all_in_one_load, 10000);
+        }
+        all_in_one_load();
+    </script>
+    <footer></footer>
+</body>
+</html>
