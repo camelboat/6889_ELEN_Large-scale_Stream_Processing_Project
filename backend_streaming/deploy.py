@@ -55,8 +55,7 @@ spark_file_name = "sparkStreaming.py"
 # MI - 22
 # TX - 43
 # while True:
-for num in [52]:
-# for num in range(52):
+for num in range(54):
     port = start_port + num
     location = location_data[num]
     loc_val = location[2:6]
