@@ -31,11 +31,10 @@ import sys, getopt
 
 # credentials
 # TODO: replace with your own credentials
-ACCESS_TOKEN = '1185444894938193920-9dTDW9Z9G0LUnW2Xlkt6qTyMB3qeCR'     # your access token
-ACCESS_SECRET = 'AZdOiKPg5xiJ4Cz2qMfg5J1uIBUnlgVjR3uG0AiNCM22x'    # your access token secret
-CONSUMER_KEY = 'fWVcVFfkPt5fGcfyB1Tcd2foC'     # your API key
-CONSUMER_SECRET = 'xZkP6Wmu0LOwocBZzA54dy76uackTYIpZgYULoNWP0hxG2xf11'  # your API secret key
-
+ACCESS_TOKEN =      # your access token
+ACCESS_SECRET =     # your access token secret
+CONSUMER_KEY =      # your API key
+CONSUMER_SECRET =   # your API secret key
 
 
 class TweetsListener(StreamListener):
@@ -116,4 +115,3 @@ if __name__ == '__main__':
 
     client = twitter_client("localhost", port, location_ini, tags)
     client.run_client()
-
