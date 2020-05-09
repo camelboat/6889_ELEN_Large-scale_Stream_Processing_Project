@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Columbia EECS E6893 Big Data Analytics
+
 """
 This module is used to pull data from twitter API and send data to
 Spark Streaming process using socket. It acts like a client of
@@ -116,3 +116,4 @@ if __name__ == '__main__':
 
     client = twitter_client("localhost", port, location_ini, tags)
     client.run_client()
+

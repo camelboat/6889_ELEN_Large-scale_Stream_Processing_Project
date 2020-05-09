@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Columbia EECS E6893 Big Data Analytics
 
 from pyspark import SparkConf, SparkContext
 from pyspark.streaming import StreamingContext
